@@ -48,6 +48,8 @@ export class Friend {
   friendId: string;
   status: FRIEND_STATUS_NUM;
   intimacyLevel: number;
+  startFriendDate: Date;
+  endFriendDate?: Date;
 }
 
 export class PaginationEntity {

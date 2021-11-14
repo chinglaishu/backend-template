@@ -2,6 +2,7 @@ import { GET_ALL_KEY, ROLE_NUM } from "../../constant/constant";
 import { User } from "src/user/entities/user.entity";
 import axios from "axios";
 import * as moment from "moment";
+import { HttpException } from "@nestjs/common";
 
 const utilsFunction = {
   async makeRequest(url: string, requestMethod: any = "get", data: any = {}, headers: any = {}) {
@@ -50,12 +51,12 @@ const utilsFunction = {
   },
   checkIfAddUserId(idKey: string, user: User | null, useObj: any) {
     if (!user) {return useObj; }
-    const {typeNum, id} = user;
-    if (typeNum === ROLE_NUM.ADMIN && useObj[GET_ALL_KEY]) {
+    const {roleNum, id} = user;
+    if (roleNum === ROLE_NUM.ADMIN && useObj[GET_ALL_KEY]) {
       delete useObj[GET_ALL_KEY];
       return useObj;
     }
-    if (!(typeNum === ROLE_NUM.ADMIN && useObj[idKey])) {
+    if (!(roleNum === ROLE_NUM.ADMIN && useObj[idKey])) {
       useObj[idKey] = id;
     }
     delete useObj[GET_ALL_KEY];
@@ -95,6 +96,15 @@ const utilsFunction = {
       if (!useObj[key]) {continue; }
       params.append(key, useObj[key]);
     }
+  },
+  getCheckUser(isCheck: boolean, user: User) {
+    return isCheck ? user : null;
+  },
+  checkReadOnly(readOnly: boolean, user: User) {
+    if (readOnly && user.roleNum !== ROLE_NUM.ADMIN) {
+      throw new HttpException("read only", 500);
+    }
+    return true;
   },
 };
 

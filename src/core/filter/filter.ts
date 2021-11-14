@@ -1,35 +1,24 @@
-import { BOOKING_STATUS_NUM, ROLE_NUM, SERVICE_NUM } from "../../constant/constant";
+import { ACCOUNT_TYPE_NUM, MATCH_METHOD_NUM, MATCH_STATUS_NUM, ROLE_NUM } from "../../constant/constant";
 
-export class UserFilterOption {
-  email: string;
-  typeNum: ROLE_NUM;
+export class BaseFilterOption {
+  id?: string;
+  from?: any;
+  to?: any;
 }
 
-export class BookingFilterOption {
-  service: SERVICE_NUM;
-  status: BOOKING_STATUS_NUM;
-  userId: string;
-  isGetAll: boolean;
-  from: Date;
-  to: Date;
+export class UserFilterOption extends BaseFilterOption {
+  username?: string;
+  roleNum?: ROLE_NUM;
+  phone?: string;
+  socialId?: string;
+  accountTypeNum?: ACCOUNT_TYPE_NUM;
 }
 
-export class TimeslotFilterOption {
-  isEnable: boolean;
-  from: Date;
-  to: Date;
-  dayAggregate?: boolean;
-  connectNum?: number;
-  isGetBeforeNow?: boolean;
-}
+export class TemplateFilterOption extends BaseFilterOption {};
 
-export class TimeslotConfigFilterOption {
-  timeInterval: number;
-  from: Date;
-  to: Date;
-}
-
-export class NotificationFilterOption {
-  userId: string;
-  isRead: boolean;
-}
+export class MatchFilterOption extends BaseFilterOption {
+  fromUserId?: string;
+  toUserId?: string;
+  method?: MATCH_METHOD_NUM;
+  status?: MATCH_STATUS_NUM;
+};

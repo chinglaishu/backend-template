@@ -26,7 +26,6 @@ async function bootstrap() {
   app.enableCors();
   await app.listen(PORT, () => {
     Logger.log('Listening at http://localhost:' + PORT + '/' + GLOBALPREFIX);
-    cronHandler.setCronJob();
   });
 }
 bootstrap();

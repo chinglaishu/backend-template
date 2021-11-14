@@ -7,11 +7,15 @@ export type ConfigDocument = Config & mongoose.Document;
 
 @Schema()
 export class Config extends BaseEntity {
-  @Prop()
+  @Prop({ required: true, index: { unique: true } })
   typeNum: CONFIG_TYPE_NUM;
+  @Prop({ required: true })
   name: string;
+  @Prop({ required: true })
   messageMethodNum: MESSAGE_METHOD_NUM;
+  @Prop({ required: true })
   subject: MultiLang;
+  @Prop({ required: true })
   content: MultiLang;
 };
 

@@ -1,12 +1,11 @@
 
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { DEFAULT_LANG, LANG_HEADER } from '../../constant/config';
-import { LANGUAGE } from '../../constant/constant';
+import { DEFAULT_LANGUAGE, LANGUAGE, LANG_HEADER } from '../../constant/constant';
 
 const getLangFromHeader = (headers: any): LANGUAGE => {
   const lang = headers[LANG_HEADER];
-  if (!lang) {return DEFAULT_LANG; }
-  if (lang !== "zh" && lang !== "en") {return DEFAULT_LANG; }
+  if (!lang) {return DEFAULT_LANGUAGE; }
+  if (lang !== "zh" && lang !== "en") {return DEFAULT_LANGUAGE; }
   return lang;
 };
 

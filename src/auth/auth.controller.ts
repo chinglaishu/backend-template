@@ -1,7 +1,7 @@
-import { Controller, Post, Body, HttpException, CACHE_MANAGER, Inject, Req, Get } from '@nestjs/common';
+import { Controller, Post, Body, HttpException } from '@nestjs/common';
 import { Public } from 'src/core/decorator/public.decorator';
 import { AuthService } from "./auth.service";
-import { GoogleAuthDto, SignupDto, LoginDto, ResetPasswordDto, ChangeContactDto, ForgetPasswordDto, ForgetPasswordRequestDto, RefreshTokenDto, SMSRequest } from './dto/auth.dto';
+import { SignupDto, LoginDto, ResetPasswordDto, ForgetPasswordDto, ForgetPasswordRequestDto, RefreshTokenDto, SMSRequestDto, SocialAuthDto, SMSVerifyDto } from './dto/auth.dto';
 import { UserService } from 'src/user/user.service';
 import JwtStrategy from 'src/core/authentication/jwt.strategy';
 import crypt from 'src/utils/utilsFunction/crypt';
@@ -10,11 +10,10 @@ import { ReqUser } from 'src/core/decorator/user.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { ConfigService } from 'src/config/config.service';
 import { Lang } from 'src/core/decorator/lang.decorator';
-import { CONFIG_TYPE_NUM, LANGUAGE, SIGNUP_METHOD_NUM } from '../constant/constant';
+import { CONFIG_TYPE_NUM, LANGUAGE, ACCOUNT_TYPE_NUM } from '../constant/constant';
 import { ACCESS_TOKEN_EXPIRE_TIME, REFERSH_TOKEN_EXPIRE_TIME } from 'src/constant/config';
-import { Roles } from 'src/core/authorization/role.decorator';
-import { Role } from 'src/core/authorization/role.enum';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { redisClient } from 'src/core/cache/cache';
 
 @Controller('auth')
 export class AuthController {
@@ -22,23 +21,18 @@ export class AuthController {
     public service: AuthService,
     public userService: UserService,
     public configService: ConfigService,
-    @Inject(CACHE_MANAGER) private cache: any,
   ) {}
 
   @Public()
-  @Post("google/signup")
-  async googleSignup(@Body() googleAuthDto: GoogleAuthDto) {
-    const email = await this.service.getEmailFromGoogleToken(googleAuthDto);
-    const createUserDto: CreateUserDto = {email, signupMethodNum: SIGNUP_METHOD_NUM.GMAIL};
-    const result = await this.userService.create(createUserDto);
-    return result;
-  }
-
-  @Public()
-  @Post("google/login")
-  async googleLogin(@Body() googleAuthDto: GoogleAuthDto) {
-    const email = await this.service.getEmailFromGoogleToken(googleAuthDto);
-    const user = await this.userService.findOneWithFilter({email}, true);
+  @Post("social-auth")
+  async socialAuth(@Body() socialAuthDto: SocialAuthDto) {
+    const {accountTypeNum} = socialAuthDto;
+    const socialId = await this.service.getSocialIdFromSocialAuth(socialAuthDto);
+    let user = await this.userService.findOneWithFilter({socialId, accountTypeNum});
+    if (!user) {
+      const createUserDto: CreateUserDto = {socialId, accountTypeNum: socialAuthDto.accountTypeNum};
+      user = await this.userService.create(createUserDto);
+    }
     const token = JwtStrategy.signByUser(user, ACCESS_TOKEN_EXPIRE_TIME);
     const refreshToken = await this.service.generateRefreshToken(user);
     return {user, token, refreshToken};
@@ -46,34 +40,54 @@ export class AuthController {
 
   @Public()
   @Post("token/request")
-  async signupRequest(@Body() body: SMSRequest, @Lang() lang: LANGUAGE) {
-    const {phone} = body;
-    await this.userService.countAndError({phone});
-    await this.service.sendCode(this.cache, phone, phone, this.configService, lang);
+  async signupRequest(@Body() smsRequestDto: SMSRequestDto, @Lang() lang: LANGUAGE) {
+    const {phone, isSignup} = smsRequestDto;
+    if (isSignup) {
+      // dont let others know this phone is used?
+      await this.userService.countAndError({phone});
+    }
+    await this.service.sendCode(redisClient, phone, phone, this.configService, lang);
     return true;
   }
 
   @Public()
   @Post("forget-password-token/request")
   async forgetPasswordToken(@Body() body: ForgetPasswordRequestDto, @Lang() lang: LANGUAGE) {
-    const {email, phone} = body;
-    await this.userService.findOneWithFilter({email, phone}, true);
-    await this.service.sendCode(this.cache, phone, phone, this.configService, lang);
+    const {phone} = body;
+    const user: User = await this.userService.findOneWithFilter({phone}, true);
+    await this.service.sendCode(redisClient, user.id, phone, this.configService, lang);
     return true;
   }
 
   @Public()
   @Post("signup")
   async signup(@Body() signupDto: SignupDto, @Lang() lang: LANGUAGE) {
-    const user = await this.service.signup(signupDto, this.cache, this.userService);
-    return user;
+    const user = await this.service.signup(signupDto, this.userService);
+    const token = JwtStrategy.signByUser(user, ACCESS_TOKEN_EXPIRE_TIME);
+    const refreshToken = await this.service.generateRefreshToken(user);
+    return {user, token, refreshToken};
+  }
+
+  @Post("token/verify-only")
+  async SMSVerifyOnly(@Body() smsVerifyDto: SMSVerifyDto, @Lang() lang: LANGUAGE) {
+    const {phone, code} = smsVerifyDto;
+    await authHelper.checkIfCodeValid(redisClient, phone, code, false);
+    return true;
+  }
+
+  @Post("phone/verify")
+  async signupSMSVerify(@ReqUser() user: User, @Body() smsVerifyDto: SMSVerifyDto, @Lang() lang: LANGUAGE) {
+    const {phone, code} = smsVerifyDto;
+    await authHelper.checkIfCodeValid(redisClient, phone, code, true);
+    const result = await this.userService.update(user.id, {phone}, true);
+    return result;
   }
 
   @Public()
   @Post("login")
   async login(@Body() loginDto: LoginDto) {
-    const {email, password} = loginDto;
-    const user = await this.userService.findOneWithFilter({email}, true);
+    const {username, password} = loginDto;
+    const user = await this.userService.findOneWithFilter({username}, true);
     await crypt.comparePasswordAndHash(password, user.password);
     const token = JwtStrategy.signByUser(user, ACCESS_TOKEN_EXPIRE_TIME);
     const refreshToken = await this.service.generateRefreshToken(user);
@@ -83,9 +97,9 @@ export class AuthController {
   @Public()
   @Post("forget-password")
   async forgetPassword(@Body() forgetPasswordDto: ForgetPasswordDto) {
-    const {newPassword, code, email} = forgetPasswordDto;
-    const user = await this.userService.findOneWithFilter({email}, true);
-    await authHelper.checkIfCodeValid(this.cache, user.id, code);
+    const {newPassword, code, username} = forgetPasswordDto;
+    const user = await this.userService.findOneWithFilter({username}, true);
+    await authHelper.checkIfCodeValid(redisClient, user.id, code);
     const hashNewPassword = await crypt.hashPassword(newPassword);
     await this.userService.update(user.id, {password: hashNewPassword});
     return true;
@@ -98,13 +112,6 @@ export class AuthController {
     const hashNewPassword = await crypt.hashPassword(newPassword);
     await this.userService.update(user.id, {password: hashNewPassword});
     return true;
-  }
-
-  @Post("change-contact")
-  async changeContact(@Body() changeContactDto: ChangeContactDto, @ReqUser() user: User) {
-    const {phone, code} = changeContactDto;
-    await authHelper.checkIfCodeValid(this.cache, phone, code);
-    return await this.userService.update(user.id, {phone});
   }
 
   @Public()

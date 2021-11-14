@@ -1,6 +1,6 @@
 import { Prop } from '@nestjs/mongoose';
 import { IsArray, IsEmail, IsNumber, IsObject, IsString, Length, ValidateNested } from 'class-validator';
-import { LANGUAGE, ROLE_NUM, SIGNUP_METHOD_NUM } from '../../constant/constant';
+import { LANGUAGE, ROLE_NUM, ACCOUNT_TYPE_NUM } from '../../constant/constant';
 import { Friend, PersonalInfo, Target } from 'src/utils/base/base.entity';
 
 export class UpdateUserDto {
@@ -33,5 +33,5 @@ export class UpdateUserDto {
   lang?: LANGUAGE;
 
   @IsNumber()
-  signupMethodNum?: SIGNUP_METHOD_NUM;
+  accountTypeNum?: ACCOUNT_TYPE_NUM;
 }

@@ -4,7 +4,6 @@ import { UserController } from './user.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './entities/user.entity';
 import { ConfigModule } from 'src/config/config.module';
-import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   imports: [
@@ -12,7 +11,6 @@ import { NotificationModule } from 'src/notification/notification.module';
       { name: User.name, schema: UserSchema },
     ]),
     ConfigModule,
-    NotificationModule,
   ],
   controllers: [UserController],
   providers: [UserService],

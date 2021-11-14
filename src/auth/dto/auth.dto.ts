@@ -1,47 +1,59 @@
-import { IsEmail, IsNumber, IsObject, IsOptional, IsString, Length, ValidateNested } from 'class-validator';
+import { IsBoolean, IsEmail, IsNumber, IsObject, IsOptional, IsString, Length, ValidateNested } from 'class-validator';
+import { ACCOUNT_TYPE_NUM } from 'src/constant/constant';
 
-export class GoogleAuthDto {
+export class SocialAuthDto {
+  @IsNumber()
+  accountTypeNum: ACCOUNT_TYPE_NUM;
+
   @IsString()
   token: string;
+
+  @IsOptional()
+  @IsString()
+  clientId: string;
 }
 
 export class SignupDto {
   @IsString()
-  email: string;
+  username: string;
 
   @IsString()
   password: string;
+}
 
+export class SMSRequestDto {
   @IsString()
   phone: string;
+  @IsOptional()
+  @IsBoolean()
+  isSignup?: boolean;
+}
 
+export class SMSVerifyDto {
+  @IsString()
+  phone: string;
   @IsString()
   code: string;
 }
 
 export class LoginDto {
   @IsString()
-  email: string;
+  username: string;
 
   @IsString()
   password: string;
 }
 
-export class SMSRequest {
-  @IsString()
-  phone: string;
-}
-
 export class ForgetPasswordRequestDto {
   @IsString()
-  email: string;
+  username: string;
   @IsString()
   phone: string;
 }
 
 export class ForgetPasswordDto {
   @IsString()
-  email: string;
+  username: string;
 
   @IsString()
   newPassword: string;

@@ -2,69 +2,30 @@
 
 echo "start"
 
+lowercaseTemplate="template"
+uppercaseTemplate="Template"
 lowercaseFilename=$1
-uppercaseFilename=$2
+uppercaseFilename=${lowercaseFilename^}
 
-cp -r "./src/template" "./src/$lowercaseFilename"
+startPath="./src/$lowercaseFilename"
 
-for file in ./src/$1/* ; do
-  echo $file
-  sed -i "s/template/$lowercaseFilename/g" ${file}
-  sed -i "s/Template/$uppercaseFilename/g" ${file}
+cp -r "./src/template" ${startPath}
 
-  if [[ $file == "./src/$lowercaseFilename/dto/create-template.dto.ts" ]]; then
-    mv $file "./src/$lowercaseFilename/dto/create-$lowercaseFilename.dto.ts"
-  fi
+loopDir() {
+  path=$1
+  echo ${path}
+  for file in ${path}/* ; do
+    echo ${file}
+    if [[ -f ${file} ]]; then
+      sed -i "s/$lowercaseTemplate/$lowercaseFilename/g" ${file}
+      sed -i "s/$uppercaseTemplate/$uppercaseFilename/g" ${file}
+      rename "s/$lowercaseTemplate/$lowercaseFilename/" ${file}
+    elif [[ -d ${file} ]]; then
+      loopDir ${file}
+      rename "s/$lowercaseTemplate/$lowercaseFilename/" ${file}
+    fi
+  done
+}
 
-  if [[ $file == "./src/$lowercaseFilename/dto/update-template.dto.ts" ]]; then
-    mv $file "./src/$lowercaseFilename/dto/update-$lowercaseFilename.dto.ts"
-  fi
-
-  if [[ $file == "./src/$lowercaseFilename/entities/template.entity.ts" ]]; then
-    mv $file "./src/$lowercaseFilename/entities/$lowercaseFilename.entity.ts"
-  fi
-
-  if [[ $file == "./src/$lowercaseFilename/template.controller.ts" ]]; then
-    mv $file "./src/$lowercaseFilename/$lowercaseFilename.controller.ts"
-  fi
-
-  if [[ $file == "./src/$lowercaseFilename/template.module.ts" ]]; then
-    mv $file "./src/$lowercaseFilename/$lowercaseFilename.module.ts"
-  fi
-
-  if [[ $file == "./src/$lowercaseFilename/template.service.ts" ]]; then
-    mv $file "./src/$lowercaseFilename/$lowercaseFilename.service.ts"
-  fi
-done
-
-for file in ./src/$1/*/* ; do
-  echo $file
-  sed -i "s/template/$lowercaseFilename/g" ${file}
-  sed -i "s/Template/$uppercaseFilename/g" ${file}
-
-  if [[ $file == "./src/$lowercaseFilename/dto/create-template.dto.ts" ]]; then
-    mv $file "./src/$lowercaseFilename/dto/create-$lowercaseFilename.dto.ts"
-  fi
-
-  if [[ $file == "./src/$lowercaseFilename/dto/update-template.dto.ts" ]]; then
-    mv $file "./src/$lowercaseFilename/dto/update-$lowercaseFilename.dto.ts"
-  fi
-
-  if [[ $file == "./src/$lowercaseFilename/entities/template.entity.ts" ]]; then
-    mv $file "./src/$lowercaseFilename/entities/$lowercaseFilename.entity.ts"
-  fi
-
-  if [[ $file == "./src/$lowercaseFilename/template.controller.ts" ]]; then
-    mv $file "./src/$lowercaseFilename/$lowercaseFilename.controller.ts"
-  fi
-
-  if [[ $file == "./src/$lowercaseFilename/template.module.ts" ]]; then
-    mv $file "./src/$lowercaseFilename/$lowercaseFilename.module.ts"
-  fi
-
-  if [[ $file == "./src/$lowercaseFilename/template.service.ts" ]]; then
-    mv $file "./src/$lowercaseFilename/$lowercaseFilename.service.ts"
-  fi
-done
-
-echo "end"
+loopDir ${startPath}
+printf "\nexport class ${uppercaseFilename}FilterOption {};" >> "./src/core/filter/filter.ts"

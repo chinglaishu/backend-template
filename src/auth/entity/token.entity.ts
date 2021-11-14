@@ -6,11 +6,11 @@ export type TokenDocument = Token & mongoose.Document;
 
 @Schema()
 export class Token extends BaseEntity {
-  @Prop()
+  @Prop({ required: true })
   userId: string;
-  @Prop()
+  @Prop({ required: true })
   refreshToken: string;
-  @Prop({default: true})
+  @Prop({ default: true })
   isEnable: boolean;
 }
 

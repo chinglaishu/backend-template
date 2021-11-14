@@ -1,6 +1,6 @@
 module.exports = {
   apps : [{
-    name   : "phase-scientific",
+    name   : "backend-template",
     script : "./dist/src/main"
   }]
 }

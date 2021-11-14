@@ -6,7 +6,6 @@ export type TemplateDocument = Template & mongoose.Document;
 
 @Schema()
 export class Template extends BaseEntity {
-
 }
 
 export const TemplateSchema = SchemaFactory.createForClass(Template);

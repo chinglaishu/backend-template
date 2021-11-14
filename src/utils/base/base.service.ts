@@ -1,10 +1,11 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { ROLE_NUM } from '../../constant/constant';
+import { ROLE_NUM, USER_ID_FIELD } from '../../constant/constant';
 import { User } from 'src/user/entities/user.entity';
 import utilsFunction from '../utilsFunction/utilsFunction';
 import { PaginationEntity } from "./base.entity";
+import { BaseFilterOption } from 'src/core/filter/filter';
 
-export class BaseService<CreateDto, UpdateDto, FilterOption> {
+export class BaseService<CreateDto, UpdateDto, FilterOption extends BaseFilterOption> {
   constructor(
     public model: any,
   ) {}
@@ -15,7 +16,7 @@ export class BaseService<CreateDto, UpdateDto, FilterOption> {
 
   // if only admin can get all and filter do not have a userId then userId will add to the filter
   async findAll(filter: FilterOption, page: number, pageSize: number, checkIfAddUserIdByUser: User | null = null, sort: any = {}) {
-    filter = utilsFunction.checkIfAddUserId("userId", checkIfAddUserIdByUser, filter);
+    filter = utilsFunction.checkIfAddUserId(USER_ID_FIELD, checkIfAddUserIdByUser, filter);
   
     let totalCount, data;
 
@@ -30,7 +31,7 @@ export class BaseService<CreateDto, UpdateDto, FilterOption> {
     }
 
     const result = new PaginationEntity();
-    result.data = data
+    result.data = data;
     result.page = page;
     result.pageSize = pageSize;
     result.totalPage = Math.ceil(totalCount/pageSize);
@@ -50,7 +51,7 @@ export class BaseService<CreateDto, UpdateDto, FilterOption> {
     return result;
   }
 
-  async findOneWithFilter(filter: any, throwErrorIfNotFound: boolean = false) {
+  async findOneWithFilter(filter: FilterOption, throwErrorIfNotFound: boolean = false) {
     const result = await this.model.findOne(filter);
     if (!result && throwErrorIfNotFound) {
       throw new HttpException("item not found", 500);
@@ -58,12 +59,12 @@ export class BaseService<CreateDto, UpdateDto, FilterOption> {
     return result;
   }
 
-  async count(filter: any) {
-    const count = await this.model(filter);
+  async count(filter: FilterOption) {
+    const count = await this.model.count(filter);
     return count;
   }
 
-  async countAndError(filter: any, errMessage: string = "error, more than one") {
+  async countAndError(filter: FilterOption, errMessage: string = "error, more than one") {
     const count = await this.count(filter);
     if (count > 0) {
       throw new HttpException(errMessage, 500);
@@ -89,7 +90,7 @@ export class BaseService<CreateDto, UpdateDto, FilterOption> {
     return result;
   }
 
-  createFilterForTime(filter: any) {
+  createFilterForTime(filter: FilterOption) {
     const {from, to} = filter;
     if (from && to) {
       const startTimeFilter = {
@@ -106,10 +107,10 @@ export class BaseService<CreateDto, UpdateDto, FilterOption> {
   getFilterByIfCheckBelongToUser(id: string, checkBelongToUser: User | null) {
     const filter = {_id: id};
     if (checkBelongToUser) {
-      if (checkBelongToUser.typeNum === ROLE_NUM.ADMIN) {
+      if (checkBelongToUser.roleNum === ROLE_NUM.ADMIN) {
         return filter;
       }
-      filter["userId"] = checkBelongToUser.id;
+      filter[USER_ID_FIELD] = checkBelongToUser.id;
     }
     return filter;
   }

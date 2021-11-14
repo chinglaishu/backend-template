@@ -1,8 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AuthGuard } from '@nestjs/passport';
-import { DTO_TYPE_NUM_KEY } from 'src/constant/config';
-import { DecodeTokenObj } from 'src/types/common';
+import { DTO_TYPE_NUM_KEY } from 'src/constant/constant';
 import { UserService } from 'src/user/user.service';
 import { IS_PUBLIC_KEY } from '../decorator/public.decorator';
 import JwtStrategy from './jwt.strategy';

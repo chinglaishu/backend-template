@@ -1,32 +1,32 @@
 import { HttpException } from "@nestjs/common";
 import { DEFAULT_TTL } from "src/constant/constant";
+import { redisHelper } from "src/core/cache/cache";
 import { User } from "src/user/entities/user.entity";
+import utilsFunction from "src/utils/utilsFunction/utilsFunction";
 
 const generateDigitNumber = (digit: number) => {
   let result = "";
   for (let i = 0; i < digit; i++) {
       result = result + `${Math.ceil(Math.random() * 9)}`
   }
-  return result;
+  return String(result);
 };
 
 const authHelper = {
   async setCodeForUser(cache: any, useKey: string, ttl: number = DEFAULT_TTL) {
     const code = generateDigitNumber(4);
-    await cache.set(useKey, code, {
-      ttl,
-    });
-    console.log(`code: ${code}`)
+    await redisHelper.setRedisKey(cache, useKey, code, ttl);
+    console.log(`code: ${code}`);
     return code;
   },
-  async checkIfCodeValid(cache: any, useKey: string, code: string, throwErrorIfNotValid: boolean = true) {
-    const storeCode = await cache.get(useKey);
-    const isValid = storeCode && storeCode === code;
-    if (!isValid && throwErrorIfNotValid) {
+  async checkIfCodeValid(cache: any, useKey: string, code: string, isDelete: boolean = true) {
+    const storeCode = await redisHelper.getRedisKey(cache, useKey);
+    const isValid = storeCode && utilsFunction.compareId(storeCode, code);
+    if (!isValid) {
       throw new HttpException(`code not valid`, 401);
     }
-    if (storeCode === code) {
-      await cache.del(useKey);
+    if (isValid && isDelete) {
+      await redisHelper.delRedisKey(cache, useKey);
     }
     return isValid;
   },

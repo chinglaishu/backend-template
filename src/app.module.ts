@@ -9,6 +9,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from "./auth/auth.module";
 import { DB_HOST, DB_NAME, DB_PASSWORD, DB_USERNAME } from './constant/config';
 import { ConfigModule } from './config/config.module';
+import { MatchModule } from './match/match.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ConfigModule } from './config/config.module';
     UserModule,
     AuthModule,
     ConfigModule,
+    MatchModule,
   ],
   controllers: [AppController],
   providers: [AppService, 

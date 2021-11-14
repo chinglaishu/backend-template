@@ -4,10 +4,10 @@ import { ExecutionContext, HttpException } from "@nestjs/common";
 import { AUTH_HEADER } from "../../constant/constant";
 import { User } from "src/user/entities/user.entity";
 import { DecodeTokenObj } from "src/types/common";
+import { AppleDecodeToken } from "src/types/auth";
 
 const JwtStrategy = {
   sign(userId: any, expireTime: string) {
-    console.log(expireTime);
     return jwt.sign({userId}, JWT_SECRET, {expiresIn: expireTime});
   },
   signByUser(user: User, expireTime: string) {
@@ -32,9 +32,11 @@ const JwtStrategy = {
   },
   getTokenFromReq(req: Request) {
     const {headers} = req;
-    console.log(headers);
     const token = headers[AUTH_HEADER];
     return token;
+  },
+  decode(token: string) {
+    return (jwt.decode(token)) as AppleDecodeToken;
   },
 };
 

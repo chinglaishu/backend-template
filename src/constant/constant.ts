@@ -3,6 +3,7 @@ export const AUTH_HEADER = "authorization";
 export const TIMEZONE = "Asia/Hong_Kong";
 export const DEFAULT_LANGUAGE: LANGUAGE = "en";
 export const LANG_HEADER = "accept-language";
+export const GET_ALL_KEY = "isGetAll";
 
 export const DTO_TYPE_NUM_KEY = "dto_typeNum";
 export const DTO_CHECK_ADMIN_FIELD_KEY = "dto-check-admin";
@@ -10,18 +11,24 @@ export const DEFAULT_PAGE_SIZE = 20;
 export const DEFAULT_TTL = 3600;
 export const MAX_INTIMACY_LEVEL = 10;
 
+export const USER_ID_FIELD = "userId";
+
 export type LANGUAGE = "en" | "zh";
 
-export type SIGNUP_METHOD_NUM = 0 | 1;
-export const SIGNUP_METHOD_NUM: {
+export type ACCOUNT_TYPE_NUM = 0 | 1 | 2 | 3;
+export const ACCOUNT_TYPE_NUM: {
   
-  NORMAL: SIGNUP_METHOD_NUM,
-  GMAIL: SIGNUP_METHOD_NUM,
+  NORMAL: ACCOUNT_TYPE_NUM,
+  GOOGLE: ACCOUNT_TYPE_NUM,
+  FACEBOOK: ACCOUNT_TYPE_NUM,
+  APPLE: ACCOUNT_TYPE_NUM,
 
 } = {
 
   NORMAL: 0,
-  GMAIL: 1,
+  GOOGLE: 1,
+  FACEBOOK: 2,
+  APPLE: 3,
 
 };
 
@@ -39,6 +46,7 @@ export const SEX_NUM: {
 export const SEX_NUM_REF = {
   0: "Male",
   1: "Female",
+  2: "Other",
 };
 
 export type WEEK_DAY_NUM = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -101,28 +109,6 @@ export const MESSAGE_METHOD_NUM: {
 
 };
 
-export type PAY_STATUS_NUM = 0 | 1;
-export const PAY_STATUS_NUM: {
-
-  NOT_PAID: PAY_STATUS_NUM,
-  PAID: PAY_STATUS_NUM,
-
-} = {
-  NOT_PAID: 0,
-  PAID: 1,
-};
-
-export type PAY_METHOD_NUM = 0 | 1;
-export const PAY_METHOD_NUM: {
-
-  VISA: 0,
-  CASH: 1,
-
-} = {
-  VISA: 0,
-  CASH: 1,
-};
-
 export type AGE_RANGE_NUM = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export const AGE_RANGE_NUM: {
 
@@ -159,3 +145,22 @@ export const FRIEND_STATUS_NUM: {
   normal: 0,
 };
 
+export type MATCH_STATUS_NUM = -1 | 0 | 1;
+export const MATCH_STATUS_NUM: {
+  REJECTED: MATCH_STATUS_NUM,
+  WAITING: MATCH_STATUS_NUM,
+  ACCEPTED: MATCH_STATUS_NUM,
+} = {
+  REJECTED: -1,
+  WAITING: 0,
+  ACCEPTED: 1,
+};
+
+export type MATCH_METHOD_NUM = 0 | 1;
+export const MATCH_METHOD_NUM: {
+  SYSTEM: MATCH_METHOD_NUM,
+  MANUAL: MATCH_METHOD_NUM,
+} = {
+  SYSTEM: 0,
+  MANUAL: 1,
+};

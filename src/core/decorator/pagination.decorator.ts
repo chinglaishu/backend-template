@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { DEFAULT_PAGE_SIZE } from '../../constant/config';
+import { DEFAULT_PAGE_SIZE } from 'src/constant/constant';
 
 export class PageOption {
     page: number
