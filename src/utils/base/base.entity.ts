@@ -1,5 +1,5 @@
 import { Prop, Schema } from '@nestjs/mongoose';
-import { AGE_RANGE_NUM, FRIEND_STATUS_NUM, SEX_NUM } from '../../constant/constant';
+import {} from '../../constant/constant';
 
 @Schema({
   toJSON: { virtuals: true },
@@ -23,34 +23,6 @@ export class EmailOrSMSData {
   content: string;
   replace: string;
 };
-
-export class PersonalInfo {
-  sex: SEX_NUM;
-  ageRange: AGE_RANGE_NUM;
-  country: Location;
-  city: Location;
-  profilePicOneUrl: string;
-  profilePicTwoUrl: string;
-}
-
-export class Location {
-  placeId: string;
-  name: MultiLang;
-};
-
-export class Target {
-  targetSexs: SEX_NUM[];
-  targetAgeRanges: AGE_RANGE_NUM[];
-  targetLocations: Location[];
-};
-
-export class Friend {
-  friendId: string;
-  status: FRIEND_STATUS_NUM;
-  intimacyLevel: number;
-  startFriendDate: Date;
-  endFriendDate?: Date;
-}
 
 export class PaginationEntity {
   constructor(totalPage?: number, data?: Array<any>, page?: number, pageSize?: number) {

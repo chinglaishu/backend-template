@@ -16,7 +16,7 @@ export class ConfigService extends BaseService<CreateConfigDto, UpdateConfigDto,
   }
 
   async findByLang(typeNum: CONFIG_TYPE_NUM, lang: LANGUAGE) {
-    const config: Config = await this.findOneWithFilter({typeNum}, true);
+    const config: Config = await this.findOneWithFilter({typeNum}, null, true);
     const {subject, content, messageMethodNum} = config;
     return {subject: subject[lang], content: content[lang], messageMethodNum};
   }

@@ -15,6 +15,23 @@ export const USER_ID_FIELD = "userId";
 
 export type LANGUAGE = "en" | "zh";
 
+export type ACCOUNT_TYPE_NUM = 0 | 1 | 2 | 3;
+export const ACCOUNT_TYPE_NUM: {
+  
+  NORMAL: ACCOUNT_TYPE_NUM,
+  GOOGLE: ACCOUNT_TYPE_NUM,
+  FACEBOOK: ACCOUNT_TYPE_NUM,
+  APPLE: ACCOUNT_TYPE_NUM,
+
+} = {
+
+  NORMAL: 0,
+  GOOGLE: 1,
+  FACEBOOK: 2,
+  APPLE: 3,
+
+};
+
 export type WEEK_DAY_NUM = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export const WEEK_DAY_NUM: {
 
@@ -60,4 +77,17 @@ export const CONFIG_TYPE_NUM: {
   VERIFY_CODE: 0,
   SIGNUP_SUCCESS: 1,
   REUSE_REFRESH_TOKEN: 2,
+};
+
+export type MESSAGE_METHOD_NUM = 0 | 1;
+export const MESSAGE_METHOD_NUM: {
+
+  EMAIL: MESSAGE_METHOD_NUM,
+  SMS: MESSAGE_METHOD_NUM,
+
+} = {
+
+  EMAIL: 0,
+  SMS: 1,
+
 };

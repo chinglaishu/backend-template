@@ -17,4 +17,10 @@ export class SocketGateway {
     console.log(data);
     this.server.sockets.emit('receive_event', data);
   }
+
+  sendMessages(data: any) {
+    console.log("send");
+    console.log(data);
+    this.server.sockets.emit("receive_event", data);
+  }
 }

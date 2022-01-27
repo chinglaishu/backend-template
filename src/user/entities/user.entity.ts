@@ -8,6 +8,12 @@ export type UserDocument = User & mongoose.Document;
 @Schema()
 export class User extends BaseEntity {
   @Prop()
+  username: string;
+  @Prop()
+  password: string;
+  @Prop()
+  displayName: string;
+  @Prop()
   role: ROLE_NUM;
 }
 
@@ -21,6 +27,7 @@ UserSchema.set('toJSON', {
   virtuals: true,
   versionKey:false,
   transform: function (doc, ret) {  
+    delete ret["password"]
     delete ret._id 
     return ret
   }

@@ -2,6 +2,7 @@ import { CacheModule, Module, ValidationPipe } from '@nestjs/common';
 import { SocketGateway } from "./socket.gateway";
 
 @Module({
-  providers: [SocketGateway]
+  providers: [SocketGateway],
+  exports: [SocketGateway],
 })
 export class SocketModule {}

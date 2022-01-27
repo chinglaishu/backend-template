@@ -51,12 +51,12 @@ const utilsFunction = {
   },
   checkIfAddUserId(idKey: string, user: User | null, useObj: any) {
     if (!user) {return useObj; }
-    const {roleNum, id} = user;
-    if (roleNum === ROLE_NUM.ADMIN && useObj[GET_ALL_KEY]) {
+    const {role, id} = user;
+    if (role === ROLE_NUM.ADMIN && useObj[GET_ALL_KEY]) {
       delete useObj[GET_ALL_KEY];
       return useObj;
     }
-    if (!(roleNum === ROLE_NUM.ADMIN && useObj[idKey])) {
+    if (!(role === ROLE_NUM.ADMIN && useObj[idKey])) {
       useObj[idKey] = id;
     }
     delete useObj[GET_ALL_KEY];
@@ -101,7 +101,7 @@ const utilsFunction = {
     return isCheck ? user : null;
   },
   checkReadOnly(readOnly: boolean, user: User) {
-    if (readOnly && user.roleNum !== ROLE_NUM.ADMIN) {
+    if (readOnly && user.role !== ROLE_NUM.ADMIN) {
       throw new HttpException("read only", 500);
     }
     return true;
