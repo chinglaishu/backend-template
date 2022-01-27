@@ -1,4 +1,15 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import utilsFunction from 'src/utils/utilsFunction/utilsFunction';
+
+
+const handleArray = (filter: any) => {
+  const keys = Object.keys(filter);
+  for (let i = 0 ; i < keys.length ; i++) {
+    if (utilsFunction.checkIfIsArrayAndHaveItem(filter[keys[i]])) {
+      filter[keys[i]] = {$in: filter[keys[i]]};
+    }
+  }
+}
 
 export const Filter = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
@@ -12,6 +23,7 @@ export const Filter = createParamDecorator(
       useFilter["_id"] = useFilter["id"];
       delete useFilter["id"];
     }
+    handleArray(useFilter);
     return useFilter;
   },
 );

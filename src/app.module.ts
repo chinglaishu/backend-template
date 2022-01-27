@@ -9,7 +9,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from "./auth/auth.module";
 import { DB_HOST, DB_NAME, DB_PASSWORD, DB_USERNAME } from './constant/config';
 import { ConfigModule } from './config/config.module';
-import { MatchModule } from './match/match.module';
+import { SocketModule } from './socket/socket.module';
 
 @Module({
   imports: [
@@ -23,7 +23,7 @@ import { MatchModule } from './match/match.module';
     UserModule,
     AuthModule,
     ConfigModule,
-    MatchModule,
+    SocketModule,
   ],
   controllers: [AppController],
   providers: [AppService, 

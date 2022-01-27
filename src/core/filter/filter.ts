@@ -22,3 +22,4 @@ export class MatchFilterOption extends BaseFilterOption {
   method?: MATCH_METHOD_NUM;
   status?: MATCH_STATUS_NUM;
 };
+export class UserFilterOption {};
