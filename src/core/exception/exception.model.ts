@@ -1,12 +1,16 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
-import { AppErrorCode } from "./exceptioncode.enum";
+import { ErrorResponseData } from "./exceptioncode.enum";
 
 export class ApplicationException extends HttpException {
-    constructor(private code: AppErrorCode = AppErrorCode.UNKNOWN_ERROR, statusCode: HttpStatus = HttpStatus.BAD_REQUEST, private  errMessage: string = "") {
-        super(errMessage, statusCode);
+    constructor(private error: ErrorResponseData, private data?: any) {
+        super(error.message, error.status);
     }
 
-    getErrorCode(): AppErrorCode {
-        return this.code;
+    getErrorCode(): number {
+        return this.error.code;
+    }
+
+    getData(): any {
+        return this.data;
     }
 }

@@ -2,6 +2,7 @@ import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Unaut
 import { Request, Response } from 'express';
 import utilsFunction from 'src/utils/utilsFunction/utilsFunction';
 import { ApplicationException } from './exception.model';
+import { CommonError } from './exceptioncode.enum';
 
 @Catch(Error)
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -13,14 +14,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
       ? exception.getStatus() : HttpStatus.BAD_REQUEST;
     const message = utilsFunction.tryJsonParse(exception.message);
 
-    const info = utilsFunction.getObjKeyPath(exception, ["response", "message", "0"], null);
+    const defaultError = CommonError.UNKNOWN_ERROR;
+    const data = exception instanceof ApplicationException ? exception.getData() : null;
 
     response
       .status(status)
       .json({
+        code: exception instanceof ApplicationException ? exception.getErrorCode() :defaultError.code,
         message,
-        data: null,
-        info,
+        data,
       });
   }
 }

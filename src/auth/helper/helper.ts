@@ -1,8 +1,9 @@
-import { HttpException } from "@nestjs/common";
 import { DEFAULT_TTL } from "src/constant/constant";
 import { redisHelper } from "src/core/cache/cache";
+import { ApplicationException } from "src/core/exception/exception.model";
 import { User } from "src/user/entities/user.entity";
 import utilsFunction from "src/utils/utilsFunction/utilsFunction";
+import { AuthError } from "../error/error";
 
 const generateDigitNumber = (digit: number) => {
   let result = "";
@@ -23,7 +24,7 @@ const authHelper = {
     const storeCode = await redisHelper.getRedisKey(cache, useKey);
     const isValid = storeCode && utilsFunction.compareId(storeCode, code);
     if (!isValid) {
-      throw new HttpException(`code not valid`, 401);
+      throw new ApplicationException(AuthError.CODE_INVALID);
     }
     if (isValid && isDelete) {
       await redisHelper.delRedisKey(cache, useKey);

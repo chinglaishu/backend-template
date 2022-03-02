@@ -70,6 +70,7 @@ export class AuthController {
     return {user, token, refreshToken};
   }
 
+  @Public()
   @Post("token/verify-only")
   async SMSVerifyOnly(@Body() smsVerifyDto: SMSVerifyDto, @Lang() lang: LANGUAGE) {
     const {phone, code} = smsVerifyDto;
@@ -77,6 +78,7 @@ export class AuthController {
     return true;
   }
 
+  @Public()
   @Post("phone/verify")
   async signupSMSVerify(@ReqUser() user: User, @Body() smsVerifyDto: SMSVerifyDto, @Lang() lang: LANGUAGE) {
     const {phone, code} = smsVerifyDto;

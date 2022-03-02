@@ -11,6 +11,10 @@ export class SocialAuthDto {
   @IsOptional()
   @IsString()
   clientId: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isAndroid?: boolean;
 }
 
 export class SignupDto {

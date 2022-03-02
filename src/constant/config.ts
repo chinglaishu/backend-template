@@ -27,7 +27,8 @@ export const ACCESS_TOKEN_EXPIRE_TIME = process.env.ACCESS_TOKEN_EXPIRE_TIME || 
 export const REFERSH_TOKEN_EXPIRE_TIME = process.env.REFERSH_TOKEN_EXPIRE_TIME || "180d";
 export const PASSWORD_SALT_ROUND = 10;
 
-export const GOOGLE_CLIENT_ID = "549401078361-i71620ipt8nljerc5r40lq2u2dmp4mlb.apps.googleusercontent.com";
+export const GOOGLE_CLIENT_ID_IOS = "549401078361-i71620ipt8nljerc5r40lq2u2dmp4mlb.apps.googleusercontent.com";
+export const GOOGLE_CLIENT_ID_ANDROID = "549401078361-i71620ipt8nljerc5r40lq2u2dmp4mlb.apps.googleusercontent.com";
 export const APPLE_CLIENT_SECRET = "AA";
 
 export const SENDGRID_TEMPLATE_ID = "d-575e4f8cbf4b48d5835a9bad37c2d012";

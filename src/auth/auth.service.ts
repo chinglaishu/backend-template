@@ -2,7 +2,7 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { OAuth2Client } from "google-auth-library";
-import { APPLE_CLIENT_SECRET, GOOGLE_CLIENT_ID, REFERSH_TOKEN_EXPIRE_TIME } from '../constant/config';
+import { APPLE_CLIENT_SECRET, GOOGLE_CLIENT_ID_ANDROID, GOOGLE_CLIENT_ID_IOS, REFERSH_TOKEN_EXPIRE_TIME } from '../constant/config';
 import { CreateRefreshTokenDto, SignupDto, SocialAuthDto } from './dto/auth.dto';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import authHelper from './helper/helper';
@@ -19,7 +19,8 @@ import { AppleVerifyResponse, FacebookVerifyResponse } from 'src/types/auth';
 
 const querystring = require("querystring");
 
-const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+const googleAndroidClient = new OAuth2Client(GOOGLE_CLIENT_ID_ANDROID);
+const googleIOSClient = new OAuth2Client(GOOGLE_CLIENT_ID_IOS);
 
 @Injectable()
 export class AuthService extends BaseService<CreateRefreshTokenDto, any, any> {
@@ -30,9 +31,9 @@ export class AuthService extends BaseService<CreateRefreshTokenDto, any, any> {
   }
 
   async getSocialIdFromSocialAuth(socialAuthDto: SocialAuthDto) {
-    const {token, clientId, accountTypeNum} = socialAuthDto;
+    const {token, clientId, accountTypeNum, isAndroid} = socialAuthDto;
     if (accountTypeNum === ACCOUNT_TYPE_NUM.GOOGLE) {
-      return await this.getSocialIdFromGoogleToken(token);
+      return await this.getSocialIdFromGoogleToken(token, isAndroid);
     } else if ( accountTypeNum === ACCOUNT_TYPE_NUM.FACEBOOK) {
       return await this.getSocialIdFromFacebookToken(token);
     } else if (accountTypeNum === ACCOUNT_TYPE_NUM.APPLE) {
@@ -41,13 +42,22 @@ export class AuthService extends BaseService<CreateRefreshTokenDto, any, any> {
     throw new HttpException("account type num error", 500);
   }
 
-  async getSocialIdFromGoogleToken(token: string) {
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: GOOGLE_CLIENT_ID,
-    });
-    const {email} = ticket.getPayload();
-    return email;
+  async getSocialIdFromGoogleToken(token: string, isAndroid: boolean) {
+    if (isAndroid) {
+      const ticket = await googleAndroidClient.verifyIdToken({
+        idToken: token,
+        audience: GOOGLE_CLIENT_ID_ANDROID,
+      });
+      const {email} = ticket.getPayload();
+      return email;
+    } else {
+      const ticket = await googleIOSClient.verifyIdToken({
+        idToken: token,
+        audience: GOOGLE_CLIENT_ID_IOS,
+      });
+      const {email} = ticket.getPayload();
+      return email;
+    }
   }
 
   async getSocialIdFromFacebookToken(token: string) {

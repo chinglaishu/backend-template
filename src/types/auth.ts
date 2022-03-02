@@ -34,7 +34,7 @@ export class AppleDecodeToken {
   iat: number;
   sub: string;
   at_hash: string;
-  email: string; // "fn8fwwmczc@privaterelay.appleid.com", maybe it's private and random gen by apple
+  email: string; // "fn8fwwmczc@privaterelay.appleid.com"
   email_verified: string; // string "true"
   is_private_email: string; // string "true"
   auth_time: number;
