@@ -2,9 +2,9 @@ import { SMTP_HOST, SMTP_PASSWORD, SMTP_USERNAME, SMTP_PORT } from "../../consta
 import * as nodemailer from "nodemailer";
 
 const emailer = (nodemailer as any).createTransport({
-  host: SMTP_HOST, // Office 365 server
-  port: SMTP_PORT,     // secure SMTP
-  secure: false, // false for TLS - as a boolean not string - but the default is false so just remove this completely
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+  secure: false,
   auth: {
     user: SMTP_USERNAME,
     pass: SMTP_PASSWORD
@@ -17,7 +17,7 @@ const emailer = (nodemailer as any).createTransport({
 const emailHandler = {
   async sendMail(from: any, to: any, subject: string, html: string, attachments: any[] = []) {
     const mailOptions = {
-      from: `INDICAID LAB <${from}>`,
+      from,
       to,
       subject,
       html,

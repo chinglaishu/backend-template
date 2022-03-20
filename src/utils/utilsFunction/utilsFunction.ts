@@ -1,8 +1,11 @@
-import { GET_ALL_KEY, ROLE_NUM } from "../../constant/constant";
+import { GET_ALL_KEY, ROLE_ENUM } from "../../constant/constant";
 import { User } from "src/user/entities/user.entity";
 import axios from "axios";
 import * as moment from "moment";
 import { HttpException } from "@nestjs/common";
+import { ValidationError } from "class-validator";
+import { ApplicationException } from "src/core/exception/exception.model";
+import { ErrorResponseData, UseError } from "src/core/exception/exceptioncode.enum";
 
 const utilsFunction = {
   async makeRequest(url: string, requestMethod: any = "get", data: any = {}, headers: any = {}) {
@@ -49,19 +52,6 @@ const utilsFunction = {
       return item;
     }
   },
-  checkIfAddUserId(idKey: string, user: User | null, useObj: any) {
-    if (!user) {return useObj; }
-    const {role, id} = user;
-    if (role === ROLE_NUM.ADMIN && useObj[GET_ALL_KEY]) {
-      delete useObj[GET_ALL_KEY];
-      return useObj;
-    }
-    if (!(role === ROLE_NUM.ADMIN && useObj[idKey])) {
-      useObj[idKey] = id;
-    }
-    delete useObj[GET_ALL_KEY];
-    return useObj;
-  },
   checkIfAnyFalseInList(useList: any[]) {
     for (let i = 0 ; i < useList.length ; i++) {
       if (!useList[i]) {return true; }
@@ -73,15 +63,6 @@ const utilsFunction = {
   },
   compareTime(a: any, b: any) {
     return moment(a).isSame(moment(b));
-  },
-  removeIdFromIdList(useList: any[], item: any) {
-    for (let i = 0 ; i < useList.length ; i++) {
-      if (this.compareId(useList[i], item)) {
-        useList.splice(i, 1);
-        return true;
-      }
-    }
-    return false;
   },
   checkIfIsArrayAndHaveItem(item: any) {
     if (!item) {return false; }
@@ -96,15 +77,6 @@ const utilsFunction = {
       if (!useObj[key]) {continue; }
       params.append(key, useObj[key]);
     }
-  },
-  getCheckUser(isCheck: boolean, user: User) {
-    return isCheck ? user : null;
-  },
-  checkReadOnly(readOnly: boolean, user: User) {
-    if (readOnly && user.role !== ROLE_NUM.ADMIN) {
-      throw new HttpException("read only", 500);
-    }
-    return true;
   },
 };
 

@@ -8,7 +8,7 @@ import { Model } from 'mongoose';
 import { TemplateFilterOption } from 'src/core/filter/filter';
 
 @Injectable()
-export class TemplateService extends BaseService<CreateTemplateDto, UpdateTemplateDto, TemplateFilterOption> {
+export class TemplateService extends BaseService<TemplateDocument, CreateTemplateDto, UpdateTemplateDto, TemplateFilterOption> {
   constructor(
     @InjectModel(Template.name) public model: Model<TemplateDocument>,
   ) {

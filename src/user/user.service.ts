@@ -8,7 +8,7 @@ import { Model } from 'mongoose';
 import { UserFilterOption } from 'src/core/filter/filter';
 
 @Injectable()
-export class UserService extends BaseService<CreateUserDto, UpdateUserDto, UserFilterOption> {
+export class UserService extends BaseService<UserDocument, CreateUserDto, UpdateUserDto, UserFilterOption> {
   constructor(
     @InjectModel(User.name) public model: Model<UserDocument>,
   ) {

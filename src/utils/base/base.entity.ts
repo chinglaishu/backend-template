@@ -24,8 +24,8 @@ export class EmailOrSMSData {
   replace: string;
 };
 
-export class PaginationEntity {
-  constructor(totalPage?: number, data?: Array<any>, page?: number, pageSize?: number) {
+export class PaginationEntity<Data> {
+  constructor(totalPage: number, data: Array<Data>, page: number, pageSize: number) {
       this.totalPage = totalPage;
       this.data = data;
       this.page = page;;
@@ -35,5 +35,5 @@ export class PaginationEntity {
   totalPage: number;
   page: number;
   pageSize: number;
-  data: Array<any>
+  data: Array<Data>
 }

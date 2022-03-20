@@ -2,10 +2,41 @@ git commit message
 
 feat (feature)
 fix (bug fix)
-docs
+doc
 style
 refactor
 perf (performance)
 test
 chore (maintain)
 revert (revert previous commit)
+
+---------------------------------------------------------------------
+
+When add new module, run ./create-module.sh [module name] 
+
+---------------------------------------------------------------------
+
+Authorization
+
+1. User Item Authorization 
+
+Check if the item requesting is belong to correct user by adding user id 
+to the filter.
+
+For example, request a user item by id, the filter will become 
+
+{
+  _id: id, 
+  userId: request user id 
+}
+
+Therefore, if user do not own this item can not get this user item,
+admin user can bypass this, user id will not add to the filter. 
+
+2. Field Access
+
+Should limit able to access field, by adding limit to the DTO part
+
+Error Message
+
+Error Message should be in code, and match in Frontend by Language

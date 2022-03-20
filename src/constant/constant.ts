@@ -5,7 +5,8 @@ export const DEFAULT_LANGUAGE: LANGUAGE = "en";
 export const LANG_HEADER = "accept-language";
 export const GET_ALL_KEY = "isGetAll";
 
-export const DTO_TYPE_NUM_KEY = "dto_typeNum";
+export const DTO_ROLE_KEY = "dto_role";
+export const DTO_USER_ID_KEY = "dto_userId";
 export const DTO_CHECK_ADMIN_FIELD_KEY = "dto-check-admin";
 export const DEFAULT_PAGE_SIZE = 20;
 export const DEFAULT_TTL = 3600;
@@ -15,79 +16,26 @@ export const USER_ID_FIELD = "userId";
 
 export type LANGUAGE = "en" | "zh";
 
-export type ACCOUNT_TYPE_NUM = 0 | 1 | 2 | 3;
-export const ACCOUNT_TYPE_NUM: {
-  
-  NORMAL: ACCOUNT_TYPE_NUM,
-  GOOGLE: ACCOUNT_TYPE_NUM,
-  FACEBOOK: ACCOUNT_TYPE_NUM,
-  APPLE: ACCOUNT_TYPE_NUM,
-
-} = {
-
-  NORMAL: 0,
-  GOOGLE: 1,
-  FACEBOOK: 2,
-  APPLE: 3,
-
+export enum ACCOUNT_TYPE_ENUM {
+  NORMAL = 0,
+  GOOGLE = 1,
+  FACEBOOK = 2,
+  APPLE = 3,
 };
 
-export type WEEK_DAY_NUM = 0 | 1 | 2 | 3 | 4 | 5 | 6;
-export const WEEK_DAY_NUM: {
-
-  SUN: WEEK_DAY_NUM,
-  MON: WEEK_DAY_NUM,
-  TUE: WEEK_DAY_NUM,
-  WED: WEEK_DAY_NUM,
-  THU: WEEK_DAY_NUM,
-  FRI: WEEK_DAY_NUM,
-  SAT: WEEK_DAY_NUM,
-
-} = {
-  SUN: 0,
-  MON: 1,
-  TUE: 2,
-  WED: 3,
-  THU: 4,
-  FRI: 5,
-  SAT: 6,
+export enum ROLE_ENUM {
+  ADMIN = 0,
+  USER = 1,
+  GUEST = 2,
 };
 
-export type ROLE_NUM = 0 | 1 | 2;
-export const ROLE_NUM: {
-
-  ADMIN: ROLE_NUM,
-  USER: ROLE_NUM,
-  GUEST: ROLE_NUM,
-
-} = {
-  ADMIN: 0,
-  USER: 1,
-  GUEST: 2,
+export enum CONFIG_TYPE_ENUM {
+  VERIFY_CODE = 0,
+  SIGNUP_SUCCESS = 1,
+  REUSE_REFRESH_TOKEN = 2,
 };
 
-export type CONFIG_TYPE_NUM = 0 | 1 | 2;
-export const CONFIG_TYPE_NUM: {
-
-  VERIFY_CODE: CONFIG_TYPE_NUM,
-  SIGNUP_SUCCESS: CONFIG_TYPE_NUM,
-  REUSE_REFRESH_TOKEN: CONFIG_TYPE_NUM,
-
-}  = {
-  VERIFY_CODE: 0,
-  SIGNUP_SUCCESS: 1,
-  REUSE_REFRESH_TOKEN: 2,
-};
-
-export type MESSAGE_METHOD_NUM = 0 | 1;
-export const MESSAGE_METHOD_NUM: {
-
-  EMAIL: MESSAGE_METHOD_NUM,
-  SMS: MESSAGE_METHOD_NUM,
-
-} = {
-
-  EMAIL: 0,
-  SMS: 1,
-
+export enum MESSAGE_METHOD_ENUM {
+  EMAIL = 0,
+  SMS = 1,
 };

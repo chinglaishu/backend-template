@@ -1,118 +1,83 @@
-import { HttpException, Injectable } from '@nestjs/common';
-import { ROLE_NUM, USER_ID_FIELD } from '../../constant/constant';
+import { HttpException } from '@nestjs/common';
+import { ROLE_ENUM, USER_ID_FIELD } from '../../constant/constant';
 import { User } from 'src/user/entities/user.entity';
 import utilsFunction from '../utilsFunction/utilsFunction';
-import { PaginationEntity } from "./base.entity";
+import { BaseEntity, PaginationEntity } from "./base.entity";
 import { BaseFilterOption } from 'src/core/filter/filter';
 import * as moment from 'moment-timezone';
+import { Model, Document } from 'mongoose';
+import { ApplicationException } from 'src/core/exception/exception.model';
+import { ErrorResponseData, UseError } from 'src/core/exception/exceptioncode.enum';
 
-export class BaseService<CreateDto, UpdateDto, FilterOption extends BaseFilterOption> {
+export class BaseService<UseDocument extends Document<BaseEntity>, CreateDto, UpdateDto, FilterOption> {
   constructor(
-    public model: any,
-    public createAddUserId: boolean = false,
+    public model: Model<UseDocument>,
     public populates: string[] = [],
   ) {}
 
-  async create(createDto: CreateDto, user?: User) {
-    if (this.createAddUserId && !user) {
-      throw new HttpException("no user in create", 500);
-    }
-
-    if (this.createAddUserId && user) {
-      createDto = utilsFunction.checkIfAddUserId(USER_ID_FIELD, user, createDto);
-    }
+  async create(createDto: CreateDto) {
     const result = await this.model.create(createDto);
     return await this.populateExec(result);
   }
 
-  // if only admin can get all and filter do not have a userId then userId will add to the filter
-  async findAll(filter: FilterOption, page: number, pageSize: number, checkIfAddUserIdByUser: User | null = null, sort: any = {}) {
-    filter = utilsFunction.checkIfAddUserId(USER_ID_FIELD, checkIfAddUserIdByUser, filter);
-  
-    let totalCount, data;
-
-    filter = this.createFilterForTime(filter);
-
-    totalCount = await this.model.count(filter);
-
-    data = await this.model.find(filter).sort(sort).skip((page - 1) * pageSize).limit(+pageSize).exec();
-
-    if (Object.keys(sort).length === 0) {
-      data.sort((a: any, b: any) => a.index - b.index);
-    }
-
-    const result = new PaginationEntity();
-    result.data = await this.populateExecList(data);
-    result.page = page;
-    result.pageSize = pageSize;
-    result.totalPage = Math.ceil(totalCount/pageSize);
+  async findAll(filter: FilterOption, page: number, pageSize: number, sort: any = {}) {
+    const totalCount = await this.model.count(filter);
+    let data: UseDocument[] = await this.model.find(filter).sort(sort).skip((page - 1) * pageSize).limit(+pageSize).exec();
+    data = await this.populateExecList(data);
+    const totalPage = Math.ceil(totalCount/pageSize);
+    const result = new PaginationEntity<UseDocument>(totalPage, data, page, pageSize);
     return result;
   }
 
-  async findAllWithoutPagination(filter: FilterOption, checkIfAddUserIdByUser: User | null = null, sort: any = {}) {
-    filter = utilsFunction.checkIfAddUserId(USER_ID_FIELD, checkIfAddUserIdByUser, filter);
-    filter = this.createFilterForTime(filter);
-
+  async findAllWithoutPagination(filter: FilterOption, sort: any = {}) {
     const data = await this.model.find(filter).sort(sort);
-
-    if (Object.keys(sort).length === 0) {
-      data.sort((a: any, b: any) => a.index - b.index);
-    }
-
     return await this.populateExecList(data);
   }
 
-  async findAllWithoutFilter() {
-    const result = await this.model.find();
-    return await this.populateExec(result);
-  }
-
-  async findOne(id: string, throwErrorIfNotFound: boolean = false, checkBelongToUser: User | null = null) {
-    const filter = this.getFilterByIfCheckBelongToUser(id, checkBelongToUser);
+  async findOneById(id: string, throwErrorIfNotFound: boolean = false) {
+    const filter: BaseFilterOption = {_id: id};
     const result = await this.model.findOne(filter);
-    if (!result && throwErrorIfNotFound) {
-      throw new HttpException("item not found or do not belong to user", 500);
-    }
+    this.checkThrowErroIfNotFound(result, throwErrorIfNotFound);
     return await this.populateExec(result);
   }
 
-  async findOneWithFilter(filter: FilterOption, checkIfAddUserIdByUser: User | null = null, throwErrorIfNotFound: boolean = false) {
-    filter = utilsFunction.checkIfAddUserId(USER_ID_FIELD, checkIfAddUserIdByUser, filter);
+  async findOneWithFilter(filter: FilterOption, throwErrorIfNotFound: boolean = false) {
     const result = await this.model.findOne(filter);
-    if (!result && throwErrorIfNotFound) {
-      throw new HttpException("item not found", 500);
-    }
+    this.checkThrowErroIfNotFound(result, throwErrorIfNotFound);
     return await this.populateExec(result);
   }
 
-  async count(filter: FilterOption) {
-    const count = await this.model.count(filter);
-    return count;
-  }
-
-  async countAndError(filter: FilterOption, errMessage: string = "error, more than one") {
+  async count(filter: FilterOption, errResponseData: ErrorResponseData | null = UseError.ITEM_REPEATED) {
     const count = await this.count(filter);
-    if (count > 0) {
-      throw new HttpException(errMessage, 500);
+    if (count > 0 && errResponseData) {
+      throw new ApplicationException(errResponseData);
     }
     return count;
   }
 
-  async update(id: string, updateDto: UpdateDto, throwErrorIfNotFound: boolean = false, checkBelongToUser: User | null = null) {
-    const filter = this.getFilterByIfCheckBelongToUser(id, checkBelongToUser);
+  async updateOneById(id: string, updateDto: UpdateDto, throwErrorIfNotFound: boolean = false) {
+    const filter: BaseFilterOption = {_id: id};
     const result = await this.model.findOneAndUpdate(filter, {...updateDto, updatedAt: moment().toDate()}, {new: true});
-    if (!result && throwErrorIfNotFound) {
-      throw new HttpException("item not found or do not belong to user", 500);
-    }
+    this.checkThrowErroIfNotFound(result, throwErrorIfNotFound);
     return await this.populateExec(result);
   }
 
-  async remove(id: string, throwErrorIfNotFound: boolean = false, checkBelongToUser: User | null = null) {
-    const filter = this.getFilterByIfCheckBelongToUser(id, checkBelongToUser);
+  async updateOneWithFilter(filter: FilterOption, updateDto: UpdateDto, throwErrorIfNotFound: boolean = false) {
+    const result = await this.model.findOneAndUpdate(filter, {...updateDto, updatedAt: moment().toDate()}, {new: true});
+    this.checkThrowErroIfNotFound(result, throwErrorIfNotFound);
+    return await this.populateExec(result);
+  }
+
+  async removeOneById(id: string, throwErrorIfNotFound: boolean = false) {
+    const filter: BaseFilterOption = {_id: id};
     const result = await this.model.findOneAndDelete(filter);
-    if (!result && throwErrorIfNotFound) {
-      throw new HttpException("item not found or do not belong to user", 500);
-    }
+    this.checkThrowErroIfNotFound(result, throwErrorIfNotFound);
+    return await this.populateExec(result);
+  }
+
+  async removeOneWithFilter(filter: FilterOption, throwErrorIfNotFound: boolean = false) {
+    const result = await this.model.findOneAndDelete(filter);
+    this.checkThrowErroIfNotFound(result, throwErrorIfNotFound);
     return await this.populateExec(result);
   }
 
@@ -128,33 +93,14 @@ export class BaseService<CreateDto, UpdateDto, FilterOption extends BaseFilterOp
     return results.length > 0 ? results[0] : null;
   }
 
-  createFilterForTime(filter: FilterOption) {
-    const {from, to} = filter;
-    if (from && to) {
-      const startTimeFilter = {
-        $gte: from,
-        $lt: to,
-      };
-      delete filter["from"];
-      delete filter["to"];
-      filter["startTime"] = startTimeFilter;
-    }
-    return filter;
+  checkThrowErroIfNotFound(result: UseDocument, isCheck: boolean) {
+    if (result || !isCheck) {return; }
+    throw new ApplicationException(UseError.ITEM_NOT_FOUND_OR_NO_ACCESS);
   }
 
-  getFilterByIfCheckBelongToUser(id: string, checkBelongToUser: User | null) {
-    const filter = {_id: id};
-    if (checkBelongToUser) {
-      if (checkBelongToUser.role === ROLE_NUM.ADMIN) {
-        return filter;
-      }
-      filter[USER_ID_FIELD] = checkBelongToUser.id;
-    }
-    return filter;
-  }
-
-  async populateExecList(results: any) {
+  async populateExecList(results: UseDocument[]) {
     for (let i = 0 ; i < results.length ; i++) {
+      if (!results[i]) {continue; }
       for (let a = 0 ; a < this.populates.length ; a++) {
         results[i] = await results[i].populate(this.populates[a]).execPopulate();
       }
@@ -162,7 +108,7 @@ export class BaseService<CreateDto, UpdateDto, FilterOption extends BaseFilterOp
     return results;
   }
 
-  async populateExec(result: any) {
+  async populateExec(result: UseDocument) {
     if (!result) {return null; }
     for (let i = 0 ; i < this.populates.length ; i++) {
 

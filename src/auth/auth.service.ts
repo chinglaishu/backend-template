@@ -7,7 +7,7 @@ import { CreateRefreshTokenDto, SignupDto, SocialAuthDto } from './dto/auth.dto'
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import authHelper from './helper/helper';
 import { ConfigService } from 'src/config/config.service';
-import { ACCOUNT_TYPE_NUM, CONFIG_TYPE_NUM, LANGUAGE } from '../constant/constant';
+import { ACCOUNT_TYPE_ENUM, CONFIG_TYPE_ENUM, LANGUAGE } from '../constant/constant';
 import { UserService } from 'src/user/user.service';
 import { Token, TokenDocument } from './entity/token.entity';
 import { User } from 'src/user/entities/user.entity';
@@ -16,6 +16,8 @@ import { BaseService } from 'src/utils/base/base.service';
 import configHelper from 'src/config/helper/helper';
 import utilsFunction from 'src/utils/utilsFunction/utilsFunction';
 import { AppleVerifyResponse, FacebookVerifyResponse } from 'src/types/auth';
+import { UseError } from 'src/core/exception/exceptioncode.enum';
+import { ApplicationException } from 'src/core/exception/exception.model';
 
 const querystring = require("querystring");
 
@@ -23,7 +25,7 @@ const googleAndroidClient = new OAuth2Client(GOOGLE_CLIENT_ID_ANDROID);
 const googleIOSClient = new OAuth2Client(GOOGLE_CLIENT_ID_IOS);
 
 @Injectable()
-export class AuthService extends BaseService<CreateRefreshTokenDto, any, any> {
+export class AuthService extends BaseService<TokenDocument, CreateRefreshTokenDto, any, any> {
   constructor(
     @InjectModel(Token.name) public model: Model<TokenDocument>,
   ) {
@@ -31,15 +33,17 @@ export class AuthService extends BaseService<CreateRefreshTokenDto, any, any> {
   }
 
   async getSocialIdFromSocialAuth(socialAuthDto: SocialAuthDto) {
-    const {token, clientId, accountTypeNum, isAndroid} = socialAuthDto;
-    if (accountTypeNum === ACCOUNT_TYPE_NUM.GOOGLE) {
-      return await this.getSocialIdFromGoogleToken(token, isAndroid);
-    } else if ( accountTypeNum === ACCOUNT_TYPE_NUM.FACEBOOK) {
-      return await this.getSocialIdFromFacebookToken(token);
-    } else if (accountTypeNum === ACCOUNT_TYPE_NUM.APPLE) {
-      return await this.getSocialIdFromAppleToken(token, clientId);
+    const {token, clientId, accountType, isAndroid} = socialAuthDto;
+    switch(accountType) {
+      case ACCOUNT_TYPE_ENUM.GOOGLE:
+        return await this.getSocialIdFromGoogleToken(token, isAndroid);
+      case ACCOUNT_TYPE_ENUM.FACEBOOK:
+        return await this.getSocialIdFromFacebookToken(token);
+      case ACCOUNT_TYPE_ENUM.APPLE:
+        return await this.getSocialIdFromAppleToken(token, clientId);
+      default:
+        throw new ApplicationException(UseError.UNEXPECTED_PARAMS);
     }
-    throw new HttpException("account type num error", 500);
   }
 
   async getSocialIdFromGoogleToken(token: string, isAndroid: boolean) {
@@ -65,7 +69,7 @@ export class AuthService extends BaseService<CreateRefreshTokenDto, any, any> {
     const result = await utilsFunction.makeRequest(url, "POST");
     const facebookRes: FacebookVerifyResponse = result.data;
     if (facebookRes.error) {
-      throw new HttpException("Facebook verify error", 500);
+      throw new ApplicationException(UseError.AUTH_FAILED);
     }
     return facebookRes.id;
   }
@@ -81,7 +85,7 @@ export class AuthService extends BaseService<CreateRefreshTokenDto, any, any> {
     const result = await utilsFunction.makeRequest(url, "POST", querystring.stringify(body));
     const appleRes: AppleVerifyResponse = result.data;
     if (appleRes.error) {
-      throw new HttpException("Apple verify error", 500);
+      throw new ApplicationException(UseError.AUTH_FAILED);
     }
     const decodeToken = JwtStrategy.decode(appleRes.id_token);
     return decodeToken.sub;
@@ -89,16 +93,16 @@ export class AuthService extends BaseService<CreateRefreshTokenDto, any, any> {
 
   async sendCode(cache: any, useKey: string, to: string, configService: ConfigService, lang: LANGUAGE) {
     const token = await authHelper.setCodeForUser(cache, useKey);
-    const {subject, content, messageMethodNum} = await configService.findByLang(CONFIG_TYPE_NUM.VERIFY_CODE, lang);
+    const {subject, content, messageMethod} = await configService.findByLang(CONFIG_TYPE_ENUM.VERIFY_CODE, lang);
     const useContent = content.replace(/{{TOKEN}}/g, token);
-    await configHelper.sendMessage(subject, useContent, to, messageMethodNum);
+    await configHelper.sendMessage(subject, useContent, to, messageMethod);
     return true;
   }
 
   async signup(signupDto: SignupDto, userService: UserService) {
-    const {username, password} = signupDto;
-    const createUserDto: CreateUserDto = {username, password};
-    const result = await userService.create(createUserDto);
+    const {username, password, phone} = signupDto;
+    const createUserByPhoneDto: CreateUserDto = {username, password, phone};
+    const result = await userService.create(createUserByPhoneDto);
     return result;
   }
 

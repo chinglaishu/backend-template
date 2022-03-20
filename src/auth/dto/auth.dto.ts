@@ -1,18 +1,19 @@
-import { IsBoolean, IsEmail, IsNumber, IsObject, IsOptional, IsString, Length, ValidateNested } from 'class-validator';
-import { ACCOUNT_TYPE_NUM } from 'src/constant/constant';
+import { IsBoolean, IsEmail, IsEnum, IsNumber, IsObject, IsOptional, IsString, Length, NotEquals, ValidateIf, ValidateNested } from 'class-validator';
+import { ACCOUNT_TYPE_ENUM } from 'src/constant/constant';
 
 export class SocialAuthDto {
-  @IsNumber()
-  accountTypeNum: ACCOUNT_TYPE_NUM;
+  @IsEnum(ACCOUNT_TYPE_ENUM)
+  @NotEquals(ACCOUNT_TYPE_ENUM.NORMAL)
+  accountType: ACCOUNT_TYPE_ENUM;
 
   @IsString()
   token: string;
 
-  @IsOptional()
+  @ValidateIf(o => o.accountType === ACCOUNT_TYPE_ENUM.APPLE)
   @IsString()
-  clientId: string;
+  clientId?: string;
 
-  @IsOptional()
+  @ValidateIf(o => o.accountType === ACCOUNT_TYPE_ENUM.GOOGLE)
   @IsBoolean()
   isAndroid?: boolean;
 }
@@ -23,6 +24,12 @@ export class SignupDto {
 
   @IsString()
   password: string;
+
+  @IsString()
+  phone: string;
+
+  @IsString()
+  code: string;
 }
 
 export class SMSRequestDto {

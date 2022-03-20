@@ -1,10 +1,8 @@
-import { ACCOUNT_TYPE_NUM, ROLE_NUM } from "../../constant/constant";
+import { ACCOUNT_TYPE_ENUM, ROLE_ENUM } from "../../constant/constant";
 
-export class BaseFilterOption {
-  id?: string;
-  from?: any;
-  to?: any;
-}
+export type BaseFilterOption = {
+  _id?: any;
+};
 
-export class TemplateFilterOption extends BaseFilterOption {};
+export type TemplateFilterOption = {} & BaseFilterOption;
 export class UserFilterOption {};

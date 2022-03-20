@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpException, Get } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { Public } from 'src/core/decorator/public.decorator';
 import { AuthService } from "./auth.service";
 import { SignupDto, LoginDto, ResetPasswordDto, ForgetPasswordDto, ForgetPasswordRequestDto, RefreshTokenDto, SMSRequestDto, SocialAuthDto, SMSVerifyDto } from './dto/auth.dto';
@@ -10,11 +10,12 @@ import { ReqUser } from 'src/core/decorator/user.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { ConfigService } from 'src/config/config.service';
 import { Lang } from 'src/core/decorator/lang.decorator';
-import { CONFIG_TYPE_NUM, LANGUAGE, ACCOUNT_TYPE_NUM } from '../constant/constant';
+import { LANGUAGE } from '../constant/constant';
 import { ACCESS_TOKEN_EXPIRE_TIME, REFERSH_TOKEN_EXPIRE_TIME } from 'src/constant/config';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { redisClient } from 'src/core/cache/cache';
-import { SocketGateway } from 'src/socket/socket.gateway';
+import { ApplicationException } from 'src/core/exception/exception.model';
+import { UseError } from 'src/core/exception/exceptioncode.enum';
 
 @Controller('auth')
 export class AuthController {
@@ -22,17 +23,16 @@ export class AuthController {
     public service: AuthService,
     public userService: UserService,
     public configService: ConfigService,
-    public gateway: SocketGateway,
   ) {}
 
   @Public()
   @Post("social-auth")
   async socialAuth(@Body() socialAuthDto: SocialAuthDto) {
-    const {accountTypeNum} = socialAuthDto;
+    const {accountType} = socialAuthDto;
     const socialId = await this.service.getSocialIdFromSocialAuth(socialAuthDto);
-    let user = await this.userService.findOneWithFilter({socialId, accountTypeNum});
+    let user = await this.userService.findOneWithFilter({socialId, accountType});
     if (!user) {
-      const createUserDto: CreateUserDto = {socialId, accountTypeNum: socialAuthDto.accountTypeNum};
+      const createUserDto: CreateUserDto = {socialId, accountType: socialAuthDto.accountType};
       user = await this.userService.create(createUserDto);
     }
     const token = JwtStrategy.signByUser(user, ACCESS_TOKEN_EXPIRE_TIME);
@@ -45,8 +45,7 @@ export class AuthController {
   async signupRequest(@Body() smsRequestDto: SMSRequestDto, @Lang() lang: LANGUAGE) {
     const {phone, isSignup} = smsRequestDto;
     if (isSignup) {
-      // dont let others know this phone is used?
-      await this.userService.countAndError({phone});
+      await this.userService.count({phone}, null);
     }
     await this.service.sendCode(redisClient, phone, phone, this.configService, lang);
     return true;
@@ -56,7 +55,7 @@ export class AuthController {
   @Post("forget-password-token/request")
   async forgetPasswordToken(@Body() body: ForgetPasswordRequestDto, @Lang() lang: LANGUAGE) {
     const {phone} = body;
-    const user: User = await this.userService.findOneWithFilter({phone}, null, true);
+    const user: User = await this.userService.findOneWithFilter({phone}, true);
     await this.service.sendCode(redisClient, user.id, phone, this.configService, lang);
     return true;
   }
@@ -64,6 +63,8 @@ export class AuthController {
   @Public()
   @Post("signup")
   async signup(@Body() signupDto: SignupDto, @Lang() lang: LANGUAGE) {
+    const {phone, code} = signupDto;
+    await authHelper.checkIfCodeValid(redisClient, phone, code);
     const user = await this.service.signup(signupDto, this.userService);
     const token = JwtStrategy.signByUser(user, ACCESS_TOKEN_EXPIRE_TIME);
     const refreshToken = await this.service.generateRefreshToken(user);
@@ -83,7 +84,7 @@ export class AuthController {
   async signupSMSVerify(@ReqUser() user: User, @Body() smsVerifyDto: SMSVerifyDto, @Lang() lang: LANGUAGE) {
     const {phone, code} = smsVerifyDto;
     await authHelper.checkIfCodeValid(redisClient, phone, code, true);
-    const result = await this.userService.update(user.id, {phone}, true);
+    const result = await this.userService.updateOneById(user.id, {phone}, true);
     return result;
   }
 
@@ -91,7 +92,7 @@ export class AuthController {
   @Post("login")
   async login(@Body() loginDto: LoginDto) {
     const {username, password} = loginDto;
-    const user = await this.userService.findOneWithFilter({username}, null, true);
+    const user = await this.userService.findOneWithFilter({username}, true);
     await crypt.comparePasswordAndHash(password, user.password);
     const token = JwtStrategy.signByUser(user, ACCESS_TOKEN_EXPIRE_TIME);
     const refreshToken = await this.service.generateRefreshToken(user);
@@ -102,10 +103,10 @@ export class AuthController {
   @Post("forget-password")
   async forgetPassword(@Body() forgetPasswordDto: ForgetPasswordDto) {
     const {newPassword, code, username} = forgetPasswordDto;
-    const user = await this.userService.findOneWithFilter({username}, null, true);
+    const user = await this.userService.findOneWithFilter({username}, true);
     await authHelper.checkIfCodeValid(redisClient, user.id, code);
     const hashNewPassword = await crypt.hashPassword(newPassword);
-    await this.userService.update(user.id, {password: hashNewPassword});
+    await this.userService.updateOneById(user.id, {password: hashNewPassword});
     return true;
   }
 
@@ -114,7 +115,7 @@ export class AuthController {
     const {oldPassword, newPassword} = resetPasswordDto;
     await crypt.comparePasswordAndHash(oldPassword, user.password);
     const hashNewPassword = await crypt.hashPassword(newPassword);
-    await this.userService.update(user.id, {password: hashNewPassword});
+    await this.userService.updateOneById(user.id, {password: hashNewPassword});
     return true;
   }
 
@@ -123,23 +124,23 @@ export class AuthController {
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto, @Lang() lang: LANGUAGE) {
     const {refreshToken} = refreshTokenDto;
     const userId = JwtStrategy.getUserIdFromToken(refreshToken);
-    const user = await this.userService.findOne(userId, true);
-    const token = await this.service.findOneWithFilter({refreshToken}, null, false);
+    const user = await this.userService.findOneById(userId, true);
+    const token = await this.service.findOneWithFilter({refreshToken}, false);
     if (!token) {
       await this.service.deleteAllRefreshTokenByUserId(userId);
-      throw new HttpException("token is used or invalid", 500);
+      throw new ApplicationException(UseError.REFRESH_TOKEN_USED);
     } else {
       const newRefreshToken = JwtStrategy.signByUser(user, REFERSH_TOKEN_EXPIRE_TIME);
-      await this.service.update(token.id, {refreshToken: newRefreshToken}, true);
+      await this.service.updateOneById(token.id, {refreshToken: newRefreshToken}, true);
       const accessToken = JwtStrategy.signByUser(user, ACCESS_TOKEN_EXPIRE_TIME);
       return {token: accessToken, refreshToken: newRefreshToken};
     }
   }
 
-  @Public()
-  @Get("test")
-  async test() {
-    this.gateway.sendMessages("social auth test");
-    return;
-  }
+  // @Public()
+  // @Get("test")
+  // async test() {
+  //   this.gateway.sendMessages("social auth test");
+  //   return;
+  // }
 }

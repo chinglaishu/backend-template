@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
-import { CONFIG_TYPE_NUM, MESSAGE_METHOD_NUM } from 'src/constant/constant';
+import { CONFIG_TYPE_ENUM, MESSAGE_METHOD_ENUM } from 'src/constant/constant';
 import { BaseEntity, MultiLang } from '../../utils/base/base.entity';
 
 export type ConfigDocument = Config & mongoose.Document;
@@ -8,11 +8,11 @@ export type ConfigDocument = Config & mongoose.Document;
 @Schema()
 export class Config extends BaseEntity {
   @Prop({ required: true, index: { unique: true } })
-  typeNum: CONFIG_TYPE_NUM;
+  type: CONFIG_TYPE_ENUM;
   @Prop({ required: true })
   name: string;
   @Prop({ required: true })
-  messageMethodNum: MESSAGE_METHOD_NUM;
+  messageMethod: MESSAGE_METHOD_ENUM;
   @Prop({ required: true })
   subject: MultiLang;
   @Prop({ required: true })

@@ -1,20 +1,24 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
-import { ROLE_NUM } from 'src/constant/constant';
+import { ACCOUNT_TYPE_ENUM, ROLE_ENUM } from 'src/constant/constant';
 import { BaseEntity } from '../../utils/base/base.entity';
 
 export type UserDocument = User & mongoose.Document;
 
 @Schema()
 export class User extends BaseEntity {
-  @Prop()
+  @Prop({unique: true, required: true})
   username: string;
   @Prop()
   password: string;
   @Prop()
   displayName: string;
+  @Prop({required: true, default: ROLE_ENUM.USER})
+  role: ROLE_ENUM;
   @Prop()
-  role: ROLE_NUM;
+  phone: string;
+  @Prop({required: true, default: ACCOUNT_TYPE_ENUM.NORMAL})
+  accountType: ACCOUNT_TYPE_ENUM;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

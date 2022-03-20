@@ -1,14 +1,14 @@
-import { IsNumber, IsObject, IsString, ValidateNested } from 'class-validator';
-import { CONFIG_TYPE_NUM, MESSAGE_METHOD_NUM } from '../../constant/constant';
+import { IsEnum, IsNumber, IsObject, IsString, ValidateNested } from 'class-validator';
+import { CONFIG_TYPE_ENUM, MESSAGE_METHOD_ENUM } from '../../constant/constant';
 import { MultiLang } from 'src/utils/base/base.entity';
 
 export class CreateConfigDto {
-  @IsNumber()
-  typeNum: CONFIG_TYPE_NUM;
+  @IsEnum(CONFIG_TYPE_ENUM)
+  type: CONFIG_TYPE_ENUM;
   @IsString()
   name: string;
-  @IsNumber()
-  messageMethodNum: MESSAGE_METHOD_NUM;
+  @IsEnum(MESSAGE_METHOD_ENUM)
+  messageMethod: MESSAGE_METHOD_ENUM;
   @ValidateNested()
   subject: MultiLang;
   @ValidateNested()
